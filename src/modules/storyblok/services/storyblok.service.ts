@@ -1,25 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { StoryblokConfig } from '../../../config/storyblok-config.dto';
-const StoryblokClient = require('storyblok-js-client');
+import { StoryblokClientFactory } from '../factories/storyblok-client.factory';
+import { lastValueFrom, map } from 'rxjs';
 
 @Injectable()
 export class StoryblokService {
-  private readonly storyblokClient;
-  constructor(config: StoryblokConfig) {
-    this.storyblokClient = new StoryblokClient(config);
-  }
+  constructor(private readonly storyblokClient: StoryblokClientFactory) {}
 
-  async getPage(url: string) {
-    const response = await this.storyblokClient.getStory(url, {
-      version: 'draft',
-      // cv: this.getCacheValidationTimeStamp()
-    });
-    return response.data;
+  async getArticle(url: string) {
+    const response = await lastValueFrom(
+      this.storyblokClient.getStory(url).pipe(map((resp: any) => resp.data)),
+    );
+    return { data: response };
   }
-
-  // getCacheValidationTimeStamp () {
-  //   const date = new Date();
-  //   date.setSeconds(0, 0);
-  //   return date.toISOString();
-  // }
 }
